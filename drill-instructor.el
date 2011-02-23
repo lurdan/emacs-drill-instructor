@@ -54,6 +54,49 @@
 (defvar drill-instructor-unset-major-mode-list '(term-mode)
   "Drill instructor unset list")
 
+(defvar drill-instructor-alert-expression 'message
+  "Drill instructor print method")
+
+;from http://bc.tech.coop/blog/071226.html
+(defvar drill-instructor-cuss-file "~/hartman.txt"
+  "The file that cuss words come from.")
+
+(defvar drill-instructor-cuss-strings nil
+  "The cuss words in the cuss file.")
+
+;from http://d.hatena.ne.jp/MIZUNO/20110222/1298392472
+(defface drill-instructor-pos-tip
+  '((t
+     :foreground "white"
+     :background "red"))
+  "Face for description in drill-instructor-pos-tip's tooltip.")
+
+(defun drill-instructor-cuss-open-file (file)
+  (find-file file)
+  (if (null drill-instructor-cuss-strings)
+      (let ((strings nil)
+	    (prev 1))
+	(goto-char (point-min))
+	(while (re-search-forward "^%$" (point-max) t)
+	  (push (buffer-substring-no-properties prev (- (point) 1))
+		strings)
+	  (setq prev (1+ (point))))
+	(push (buffer-substring-no-properties prev (point-max)) strings)
+	(setq drill-instructor-cuss-strings (apply 'vector strings)))))
+
+(defun drill-instructor-cuss ()
+  "Get a cuss words to display."
+  (interactive)
+  (when (null drill-instructor-cuss-strings)
+    (drill-instructor-cuss-open-file drill-instructor-cuss-file)
+    (kill-buffer (current-buffer)))
+  (cond
+   ((< 2 (length drill-instructor-cuss-strings))
+    (let* ((n (random (length drill-instructor-cuss-strings)))
+           (string (aref drill-instructor-cuss-strings n)))
+      string))
+   (t nil)))
+
 ;; setq minor-mode-alist
 (if (not (assq 'drill-instructor minor-mode-alist))
     (setq minor-mode-alist
@@ -118,33 +161,40 @@
     (define-key map "\C-h" 'delete-backward-char);C-h -> delete-backward-char
     map))
 
+(defun drill-instructor-alert (msg)
+  (cond
+   ((and (fboundp 'pos-tip-show) (equal drill-instructor-alert-expression 'pos-tip))
+    (pos-tip-show (concat msg "\n" (drill-instructor-cuss)) 'drill-instructor-pos-tip nil nil))
+   (t
+    (message (concat msg "\n" (drill-instructor-cuss))))))
+
 (defun drill-instructor-alert-up ()
   (interactive)
-  (message "Don't use up-key!!! Press C-p!! M-p!!!"))
+  (drill-instructor-alert "Don't use up-key!!! Press C-p!! M-p!!!"))
 
 (defun drill-instructor-alert-down ()
   (interactive)
-  (message "Don't use down-key!!! Press C-n!! M-n!!!"))
+  (drill-instructor-alert "Don't use down-key!!! Press C-n!! M-n!!!"))
 
 (defun drill-instructor-alert-right ()
   (interactive)
-  (message "Don't use right-key!!! Press C-f!! C-f!!!"))
+  (drill-instructor-alert "Don't use right-key!!! Press C-f!! C-f!!!"))
 
 (defun drill-instructor-alert-left ()
   (interactive)
-  (message "Don't use left-key!!! Press C-b!! C-b!!!"))
+  (drill-instructor-alert "Don't use left-key!!! Press C-b!! C-b!!!"))
 
 (defun drill-instructor-alert-del ()
   (interactive)
-  (message "Don't use DEL!!! Press C-h!! C-h!!!"))
+  (drill-instructor-alert "Don't use DEL!!! Press C-h!! C-h!!!"))
 
 (defun drill-instructor-alert-return ()
   (interactive)
-  (message "Don't use RETURN!!! Press C-m!! C-m!!!"))
+  (drill-instructor-alert "Don't use RETURN!!! Press C-m!! C-m!!!"))
 
 (defun drill-instructor-alert-tab ()
   (interactive)
-  (message "Don't use TAB!!! Press C-i!! C-i!!!"))
+  (drill-instructor-alert "Don't use TAB!!! Press C-i!! C-i!!!"))
 
 ;; mode provide
 (provide 'drill-instructor)
