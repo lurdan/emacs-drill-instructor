@@ -55,7 +55,7 @@
 (defvar drill-instructor-unset-major-mode-list '(term-mode)
   "Drill instructor unset major mode list")
 
-(defvar drill-instructor-alert-expression 'message
+(defvar drill-instructor-alert-expression (if (display-graphic-p) 'pos-tip 'message)
   "Drill instructor print method")
 
 ;from http://bc.tech.coop/blog/071226.html
